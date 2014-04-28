@@ -1,6 +1,6 @@
 var request = require('request');
 var moment = require('moment');
-var jsdom = require('jsdom');
+var cheerio = require('cheerio');
 var userAgent = 'jansegre-crawler/0.0.1';
 
 // The following is known to work:
@@ -37,43 +37,37 @@ function getBody(from_airport, to_airport, date, inter, callback) {
 function crawlPage(page, callback, retry) {
   var result = [];
   if (page == '') retry();
-  else jsdom.env({
-    html: page,
-    done: function(err, w) {
-      if (err) return callback(err, null);
-      var flights = w.document.querySelectorAll('.list_flight_direct .flight');
-      for (var i = 0, len = flights.length; i < len; i++) {
-        var e = flights[i], data = {};
-        data.aircraft = e.getAttribute('data-aircraft');
-        data.departure = new Date(e.getAttribute('data-departuredate'));
-        data.arrival = new Date(e.getAttribute('data-arrivaldate'));
-        data.flightnumber = e.getAttribute('data-flightnumber');
-        data.source_airport = e.getAttribute('data-departureairportcode');
-        data.destination_airport = e.getAttribute('data-arrivalairportcode');
-        data.prices = [];
-        var ff = e.querySelectorAll('.ff');
-        for (var j = 0, jlen = ff.length; j < jlen; j++) {
-          var f = ff[j];
-          var fare = {
-              plan: f.getAttribute('data-cell-fare-family'),
-              price: parseFloat(f.getAttribute('data-cell-price-adt')),
-              tax: parseFloat(f.getAttribute('data-cell-tax-adt')),
-          }
-          var ls = f.getAttribute('data-cell-lastseats');
-          if (ls) fare.lastseats = parseInt(ls);
-          // only push if available (price not null)
-          if (fare.price) data.prices.push(fare);
+  else {
+    var $ = cheerio.load(page);
+    $('.list_flight_direct .flight').each(function(i, e) {
+      var data = {};
+      data.aircraft = e.data.aircraft;
+      data.departure = new Date(e.data.departuredate);
+      data.arrival = new Date(e.data.arrivaldate);
+      data.flightnumber = e.data.flightnumber;
+      data.source_airport = e.data.departureairportcode;
+      data.destination_airport = e.data.arrivalairportcode;
+      data.prices = [];
+      $('.ff', e).each(function(j, f) {
+        var fare = {
+            plan: f.data.cellFareFamily,
+            price: parseFloat(f.data.cellPriceAdt),
+            tax: parseFloat(f.data.cellTaxAdt),
         }
-        result.push(data);
-      }
-      //done
-      callback(null, result);
-    }
-  });
+        var ls = f.data.cellLastseats;
+        if (ls) fare.lastseats = parseInt(ls);
+        // only push if available (price not null)
+        if (fare.price) data.prices.push(fare);
+      });
+      result.push(data);
+    });
+    //done
+    callback(null, result);
+  }
 }
 
-//example: crawl('BSB', 'SDU', '2014-07-06', false, function (data) {console.log(data)})
-function crawl(from_airport, to_airport, date, inter, callback) {
+//example: crawl('JJ', 'BSB', 'SDU', '2014-07-06', false, function (data) {console.log(data)})
+function crawl(airline_code, from_airport, to_airport, date, inter, callback) {
   var run = true, retries = 0, maxretries = 5;
   var retry = function() {
     if (retries < maxretries) {
@@ -100,7 +94,7 @@ if (require.main == module) {
     console.log('usage: node crawl.js <src> <dst> <date>');
   } else {
     // argv[0] is 'node' and argv[1] is ~'./crawl.js'
-    crawl(argv[2], argv[3], argv[4], false, function (err, data) {
+    crawl('JJ', argv[2], argv[3], argv[4], false, function (err, data) {
     //getBody(argv[2], argv[3], argv[4], false, function (err, res, data) {
       if (err) {
         console.log(err);
