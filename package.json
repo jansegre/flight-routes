@@ -1,0 +1,13 @@
+{
+  "name": "flight-routes",
+  "version": "0.0.0",
+  "description": "",
+  "author": "Jan Segre <jan@segre.in>",
+  "license": "MPLv2",
+  "dependencies": {
+    "request": "~2.34.0",
+    "moment": "~2.6.0",
+    "jsdom": "~0.10.5",
+    "sqlite3": "~2.2.3"
+  }
+}
