@@ -17,10 +17,11 @@ function singleCrawl(err, airline, date, route, routes, done) {
     crawl(airline, route.source_airport, route.destination_airport, date, international, function(err, data) {
         if (err || !data) {
             console.log('!! error crawling for ' + rt + ' ' + date + ': ' + err + '.');
-            return done()
+            return done();
         }
         if (data.length != 0) {
-            routes[rt] = data;
+            //XXX: hard copying data, somehow this was causing a memory leak
+            routes[rt] = JSON.parse(JSON.stringify(data));
             console.log('<< finished crawl for ' + rt + ' ' + date + ': ' + data.length + ' flights found.');
         } else {
             routes[rt] = 'no flights';
