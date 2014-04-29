@@ -61,6 +61,8 @@ function crawlPage(page, callback, retry) {
         // only push if available (price not null)
         if (fare.price) data.prices.push(fare);
       });
+      // clone data so it doesn't leak memory
+      data = JSON.parse(JSON.stringify(data));
       result.push(data);
     });
     //done

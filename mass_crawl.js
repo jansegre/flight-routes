@@ -20,8 +20,7 @@ function singleCrawl(err, airline, date, route, routes, done) {
             return done();
         }
         if (data.length != 0) {
-            //XXX: hard copying data, somehow this was causing a memory leak
-            routes[rt] = JSON.parse(JSON.stringify(data));
+            routes[rt] = data;
             console.log('<< finished crawl for ' + rt + ' ' + date + ': ' + data.length + ' flights found.');
         } else {
             routes[rt] = 'no flights';
