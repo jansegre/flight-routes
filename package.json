@@ -1,7 +1,7 @@
 {
   "name": "flight-routes",
   "version": "0.0.1",
-  "description": "",
+  "description": "Flight routes crawler and webapp.",
   "author": "Jan Segre <jan@segre.in>",
   "license": "MPLv2",
   "home": "https://github.com/jansegre/flight-routes/",

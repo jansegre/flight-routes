@@ -24,11 +24,6 @@ h1, h2, h3 {
   margin: 0 auto;
 }
 
-#map h1 {
-  position: absolute;
-  width: 1000px;
-}
-
 #map svg {
   pointer-events: all;
   cursor: -webkit-grab;
@@ -97,6 +92,23 @@ h1, h2, h3 {
 .airport:hover {
   cursor: pointer;
   fill: #44F;
+}
+
+.github-fork-ribbon {
+  background-color: #6d6d6d;
+}
+
+@media (max-width: 900px) {
+  h1, .github-fork-ribbon-wrapper {
+    display: none;
+  }
+  #map {
+    width: 100%;
+  }
+  #info {
+    display: absolute;
+    bottom: 0;
+  }
 }
 
 /* vim: et sw=2 ts=2 sts=2
