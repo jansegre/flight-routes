@@ -140,14 +140,15 @@ var topojson = require('topojson/topojson');
 var PriorityQueue = require('priorityqueuejs');
 var accounting = require('accounting');
 
-var degrees = 180 / Math.PI,
-    width = 900,
+var width = 900,
     height = 560;
 
-var projection = orthographicProjection(width, height)
+var projection = d3.geo.orthographic()
+    .clipAngle(90)
+    .clipExtent([[1, 1], [width - 1, height - 1]])
     .scale(800)
     .rotate([53, 14, 0])
-    .precision(.01)
+    .precision(0.5)
     .translate([width / 2, height / 2]);
 
 var path = d3.geo.path().projection(projection)
@@ -162,7 +163,7 @@ var svg = d3.select("#map")
     .on("zoom.redraw", function() {
       d3.event.sourceEvent.preventDefault();
       svg.selectAll("path").attr("d", path);
-    }))
+    }));
 
 var bg = svg.append("g").attr("class", "bg");
 var md = svg.append("g").attr("class", "md");
@@ -180,25 +181,85 @@ function drawMap(ctx, path, mousePoint) {
       .attr("d", path)
       .on("mousedown.grab", function() {
         var point;
-        if (mousePoint)
+        if (mousePoint) {
           point = ctx.insert("path", ".foreground")
             .datum({type: "Point", coordinates: projection.invert(d3.mouse(this))})
             .attr("class", "point")
             .attr("d", path);
+        }
         svg.classed("zooming", true);
         var w = d3.select(window).on("mouseup.grab", function() {
               svg.classed("zooming", false);
               w.on("mouseup.grab", null);
-              if (mousePoint) point.remove();
+              if (mousePoint) {
+                  point.remove();
+              }
             });
       });
 }
 
 bg.call(drawMap, path, true);
 
+function dijkstra(graph, src, dst) {
+  var visited = {}, parents = {}, total;
+  var priorityq = new PriorityQueue(function(pair_a, pair_b) {
+    return pair_b[1] - pair_a[1];
+  });
+
+  priorityq.enq([src, 0, null]);
+  while (!priorityq.isEmpty()) {
+    var _u = priorityq.deq();
+    var u = _u[0], d = _u[1], p = _u[2];
+
+    if (visited[u]) {
+      continue;
+    }
+
+    visited[u] = true;
+    parents[u] = p;
+
+    if (u === dst) {
+      total = d;
+      break;
+    }
+
+    // peeking u's neighbours
+    for (var v in graph[u].neighbours) {
+      if (!visited[v]) {
+        var r = graph[u].neighbours[v];
+        //TODO: take into account that you have to arrive before leaving
+        //XXX: instead of the above, the cheapest is being chosen
+        var pr = (r.length > 1 ? r.reduce(function (a, c) { return a.min_price < c.min_price ? a : c; }) : r[0]).min_price;
+        priorityq.enq([v, d + pr.price + pr.tax, u]);
+      }
+    }
+  }
+
+  var rpath = [];
+  var vert = dst;
+  while (vert != null) {
+    rpath.push(vert);
+    vert = parents[vert];
+  }
+
+  var path = rpath.slice().reverse();
+  var route = [];
+  var cur = rpath.pop();
+  while (rpath.length > 0) {
+    var next = rpath.pop();
+    route.push([cur, next]);
+    cur = next;
+  }
+
+  return {
+    total: total,
+    path: path,
+    route: route
+  };
+}
 
 var loader = d3.dispatch("world"), id = -1;
-loader.on("world." + ++id, function() { svg.selectAll("path").attr("d", path); });
+loader.on("world." + (++id), function() { svg.selectAll("path").attr("d", path); });
 
 d3.json("world-110m.json", function(error, world) {
   if (error) {
@@ -256,9 +317,9 @@ d3.json("tam_airports.json", function(error, airports) {
             .data(dijk.route.map(function(r) {
               var a = airport_graph[r[0]].coordinates;
               var b = airport_graph[r[1]].coordinates;
-              return {type: "LineString", coordinates: [a, b], route: r.join("-")}
+              return {type: "LineString", coordinates: [a, b], route: r.join("-")};
             }))
-            .attr("d", path)
+            .attr("d", path);
           lines.enter()
             .append("path")
             .attr("class", "line")
@@ -295,9 +356,11 @@ d3.json("tam_routes_20141002.json", function(error, _routes) {
   routes = _routes;
 
   var lines = [];
-  for (line in routes)
-    if (typeof routes[line] != "string")
+  for (var line in routes) {
+    if (typeof routes[line] !== "string") {
       lines.push(line.split("-"));
+    }
+  }
 
   bg.selectAll("path.route")
     .data(lines.map(function(r) {
@@ -316,88 +379,26 @@ d3.json("tam_routes_20141002.json", function(error, _routes) {
     var dest = route_name.split("-")[1];
     var route = routes[route_name];
 
-    if (typeof route != "string") for (var i = 0; i < route.length; i++) {
-      var r = route[i];
-      r.departure = new Date(r.departure.slice(0,-1) + "-0300");
-      r.arrival = new Date(r.arrival.slice(0,-1) + "-0300");
-      r.crawled_at = new Date(r.crawled_at.slice(0,-1) + "-0300");
-      r.min_price = (r.prices.length > 1 ? r.prices.reduce(function(a, c) {
-        return (a.price + a.tax < c.price + c.tax )? a : c;
-      }) : r.prices[0]);
+    if (typeof route !== "string") {
+      for (var i = 0; i < route.length; i++) {
+        var r = route[i];
+        r.departure = new Date(r.departure.slice(0,-1) + "-0300");
+        r.arrival = new Date(r.arrival.slice(0,-1) + "-0300");
+        r.crawled_at = new Date(r.crawled_at.slice(0,-1) + "-0300");
+        r.min_price = (r.prices.length > 1 ? r.prices.reduce(function(a, c) {
+          return (a.price + a.tax < c.price + c.tax )? a : c;
+        }) : r.prices[0]);
 
-      var n = (airport_graph[orig].neighbours[dest] = airport_graph[orig].neighbours[dest] || []);
-      n.push(r);
+        var n = (airport_graph[orig].neighbours[dest] = airport_graph[orig].neighbours[dest] || []);
+        n.push(r);
+      }
     }
   }
 
   loader.world();
 });
 
-function orthographicProjection(width, height) {
-  return d3.geo.orthographic()
-      .precision(.5)
-      .clipAngle(90)
-      .clipExtent([[1, 1], [width - 1, height - 1]])
-      .translate([width / 2, height / 2])
-      .scale(width / 2 - 10)
-      .rotate([0, -30]);
-}
-
-function dijkstra(graph, src, dst) {
-  var visited = {}, parents = {}, total;
-  var priorityq = new PriorityQueue(function(pair_a, pair_b) {
-    return pair_b[1] - pair_a[1];
-  });
-
-  priorityq.enq([src, 0, null]);
-  while (!priorityq.isEmpty()) {
-    var _u = priorityq.deq();
-    var u = _u[0], d = _u[1], p = _u[2];
-
-    if (visited[u]) continue;
-    visited[u] = true;
-    parents[u] = p;
-
-    if (u == dst) {
-      total = d;
-      break;
-    }
-
-    // peeking u's neighbours
-    for (var v in graph[u].neighbours) {
-      if (!visited[v]) {
-        var r = graph[u].neighbours[v];
-        //TODO: take into account that you have to arrive before leaving
-        //XXX: instead of the above, the cheapest is being chosen
-        var p = (r.length > 1 ? r.reduce(function (a, c) { return a.min_price < c.min_price ? a : c; }) : r[0]).min_price;
-        priorityq.enq([v, d + p.price + p.tax, u]);
-      }
-    }
-  }
-
-  var rpath = [];
-  var vert = dst;
-  while (vert != null) {
-    rpath.push(vert);
-    vert = parents[vert];
-  }
-
-  var path = rpath.slice().reverse();
-  var route = [];
-  var cur = rpath.pop();
-  while (rpath.length > 0) {
-    var next = rpath.pop();
-    route.push([cur, next]);
-    cur = next;
-  }
-
-  return {
-    total: total,
-    path: path,
-    route: route
-  }
-}
-
+//XXX: these are for debugging
 window.dijkstra = dijkstra;
 window.graph = airport_graph;
 

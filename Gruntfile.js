@@ -41,23 +41,7 @@ module.exports = function(grunt) {
     },
     jshint: {
       options: {
-        curly: true,
-        eqeqeq: true,
-        immed: true,
-        latedef: true,
-        newcap: true,
-        noarg: true,
-        sub: true,
-        undef: true,
-        unused: true,
-        boss: true,
-        eqnull: true,
-        browser: true,
-        globals: {
-          jQuery: true,
-          module: true,
-          require: true
-        }
+        jshintrc: true
       },
       gruntfile: {
         src: 'Gruntfile.js'
@@ -65,9 +49,6 @@ module.exports = function(grunt) {
       main: {
         src: 'main.js'
       }
-    },
-    qunit: {
-      files: ['test/**/*.html']
     },
     browserify: {
       dist: {
@@ -90,15 +71,15 @@ module.exports = function(grunt) {
   });
 
   // These plugins provide necessary tasks.
-  grunt.loadNpmTasks('grunt-contrib-concat');
   grunt.loadNpmTasks('grunt-contrib-uglify');
-  grunt.loadNpmTasks('grunt-contrib-qunit');
   grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-browserify');
 
   // Default task.
   grunt.registerTask('build', ['browserify', 'uglify']);
-  grunt.registerTask('default', ['jshint', 'qunit', 'build']);
+  grunt.registerTask('default', ['jshint', 'build']);
 
 };
+
+// vim: et sw=2 ts=2 sts=2

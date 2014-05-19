@@ -1,0 +1,39 @@
+{
+    "browser": true,
+    "node": true,
+
+    "debug": false,
+    "devel": true,
+
+    "strict": false,
+    "globalstrict": false,
+
+    "curly": true,
+    "eqeqeq": true,
+    "immed": true,
+    "latedef": true,
+    "newcap": true,
+    "noarg": true,
+    "sub": true,
+    "undef": true,
+    "unused": true,
+    "boss": true,
+    "eqnull": true,
+    "loopfunc": true,
+
+    "asi": true,
+    "laxbreak": true,
+    "bitwise": true,
+    "evil": false,
+    "expr": false,
+    "forin": false,
+    "regexp": true,
+    "regexdash": false,
+    "scripturl": true,
+    "shadow": false,
+    "supernew": false,
+
+    "trailing": true,
+    "white": false,
+    "indent": 2
+}
