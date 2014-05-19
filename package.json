@@ -4,7 +4,7 @@
   "description": "",
   "author": "Jan Segre <jan@segre.in>",
   "license": "MPLv2",
-  "home": "https://github.com/jansegre/flight-routes",
+  "home": "https://github.com/jansegre/flight-routes/",
   "dependencies": {
     "request": "~2.34.0",
     "moment": "~2.6.0",

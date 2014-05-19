@@ -1,4 +1,9 @@
-/*global module:false*/
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
 module.exports = function(grunt) {
 
   // Project configuration.
@@ -8,8 +13,11 @@ module.exports = function(grunt) {
     banner: '/*! <%= pkg.title || pkg.name %> - v<%= pkg.version %> - ' +
       '<%= grunt.template.today("yyyy-mm-dd") %>\n' +
       ' * <%= pkg.home %>\n' +
-      ' * Copyright (c) <%= grunt.template.today("yyyy") %> <%= pkg.author %>' +
-      '; Licensed under <%= pkg.license %>\n' +
+      ' * Copyright (c) <%= grunt.template.today("yyyy") %> <%= pkg.author %>\n' +
+      ' *\n' +
+      ' * This Executable Form is subject to the terms of the Mozilla Public\n' +
+      ' * License, v. 2.0. If a copy of the MPL was not distributed with this\n' +
+      ' * file, You can obtain one at http://mozilla.org/MPL/2.0/.\n' +
       ' */\n',
     // Task configuration.
     //concat: {
@@ -46,7 +54,9 @@ module.exports = function(grunt) {
         eqnull: true,
         browser: true,
         globals: {
-          jQuery: true
+          jQuery: true,
+          module: true,
+          require: true
         }
       },
       gruntfile: {

@@ -128,6 +128,12 @@ function cross(a, b) {
 })();
 
 },{"d3/d3":3}],2:[function(require,module,exports){
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
 var d3 = require('d3/d3');
 require('./lib/d3.geo.zoom');
 var topojson = require('topojson/topojson');
