@@ -5,6 +5,10 @@ body {
   padding: 0;
 }
 
+.hidden {
+  display: none;
+}
+
 #map {
   width: 900px;
   margin: 0 auto;
@@ -60,7 +64,8 @@ body {
 .line {
   fill: none;
   stroke: #444;
-  stroke-width: 2px;
+  stroke-width: 4px;
+  stroke-linecap: round;
 }
 
 .line:hover {

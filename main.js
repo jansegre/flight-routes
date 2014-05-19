@@ -96,7 +96,7 @@ d3.json("tam_airports.json", function(error, airports) {
     airport_graph[airport.iata] = airport;
   }
 
-  md.selectAll("path.airport")
+  fg.selectAll("path.airport")
       .data(airports.map(function (a) {
         return { type: "Point", coordinates: a.coordinates, iata: a.iata, projection: projection };
       }))
@@ -105,29 +105,43 @@ d3.json("tam_airports.json", function(error, airports) {
       .attr("class", "airport")
       .attr("id", function (d) { return d.iata; })
       .attr("d", projection)
-      .on("click", function(d, i) {
-          if (select_a) airport_a = d;
-          else {
-              airport_b = d;
-              var dijk = dijkstra(airport_graph, airport_a.iata, airport_b.iata);
-              var lines = md.selectAll("path.line")
-                .data(dijk.route.map(function(r) {
-                  var a = airport_graph[r[0]].coordinates;
-                  var b = airport_graph[r[1]].coordinates;
-                  return {type: "LineString", coordinates: [a, b], route: r.join("-")}
-                }))
-                .attr("d", path)
-              lines.enter()
-                .append("path")
-                .attr("class", "line")
-                .attr("id", function (d) { return d.route + "!"; })
-                .attr("d", path);
-              lines.exit()
-                .remove();
-          }
-          select_a = !select_a;
-          console.log(i);
-          console.log(d);
+      .on("click", function(d) {
+        if (select_a) {
+          airport_a = d;
+          d3.selectAll(".has-to").classed("hidden", true);
+          d3.selectAll(".has-from").classed("hidden", false);
+          d3.select("#from-airport").html(airport_graph[d.iata].name);
+          d3.select("#from-city").html(airport_graph[d.iata].city);
+        } else {
+          airport_b = d;
+          var dijk = dijkstra(airport_graph, airport_a.iata, airport_b.iata);
+          var lines = md.selectAll("path.line")
+            .data(dijk.route.map(function(r) {
+              var a = airport_graph[r[0]].coordinates;
+              var b = airport_graph[r[1]].coordinates;
+              return {type: "LineString", coordinates: [a, b], route: r.join("-")}
+            }))
+            .attr("d", path)
+          lines.enter()
+            .append("path")
+            .attr("class", "line")
+            .attr("id", function(d) { return d.route + "!"; })
+            .attr("d", path)
+            .on("click", function(d) {
+              console.log(d);
+            });
+          lines.exit()
+            .remove();
+          d3.selectAll(".has-to").classed("hidden", false);
+          d3.select("#to-airport").html(airport_graph[d.iata].name);
+          d3.select("#to-city").html(airport_graph[d.iata].city);
+          d3.select("#total").html(dijk.total);
+          var hasTotal = dijk.total != null;
+          d3.selectAll(".has-total").classed("hidden", !hasTotal);
+          d3.selectAll(".no-route").classed("hidden", hasTotal);
+        }
+        select_a = !select_a;
+        console.log(d);
       });
   loader.world();
 });
