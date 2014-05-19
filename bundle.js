@@ -151,7 +151,7 @@ var svg = d3.select("#map")
     .attr("width", width)
     .attr("height", height)
     .call(d3.geo.zoom().projection(projection)
-    .scaleExtent([projection.scale() * .35, projection.scale() * 7])
+    .scaleExtent([projection.scale() / 4, projection.scale() * 7])
     .on("zoom.redraw", function() {
       d3.event.sourceEvent.preventDefault();
       svg.selectAll("path").attr("d", path);
