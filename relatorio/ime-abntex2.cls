@@ -75,6 +75,10 @@
 
   \vfill
 
+  {\ABNTEXchapterfont\ABNTEXsectionfontsize\imprimirorientador}
+
+  \vfill
+
   {\ABNTEXchapterfont\large\imprimirlocal}\\
   {\ABNTEXchapterfont\large\imprimirdata}
 

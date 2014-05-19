@@ -178,7 +178,7 @@
 % inserir o sumario
 % ---
 \pdfbookmark[0]{\contentsname}{toc}
-\tableofcontents*
+%\tableofcontents*
 \cleardoublepage
 % ---
 
@@ -188,7 +188,23 @@
 % ----------------------------------------------------------
 \textual
 
+\chapter{Introdução}
+
+Este trabalho pode ser acessado online em \url{http://jansegre.com/flight-routes/},
+e seu código integral está disponível em \url{http://github.com/jansegre/flight-routes/} sob
+a licensa \href{http://www.mozilla.org/MPL/2.0/}{Mozilla Public License v2.0}.
+
+Foi feito um esforço para automatizar a coleta dos dados de vôos do site da TAM. O código
+referente a essa coleta não aparece neste trabalho mas está disponível online junto com
+o projeto.
+
+Em anexo está o código principal que é usado tanto para a parte web quanto para a parte mobile.
+A parte mobile é feita usando o Cordova ou PhoneGap, existem scripts no projeto para empacotar
+o aplicativo web como um aplicativo nativo usando essas ferramentas.
+
 \chapter{O Código}
+
+Segue o código principal.
 
 \lstinputlisting[language=JavaScript]{../main.js}
 
