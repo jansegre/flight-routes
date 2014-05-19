@@ -141,39 +141,59 @@ function main() {
   var PriorityQueue = require('priorityqueuejs');
   var accounting = require('accounting');
 
-  var width = 900,
-      height = 560,
-      scale = 800;
-
-  if (window.innerWidth < 900) {
-    width = height = window.innerWidth;
-    if (window.innerHeight < height - 50) {
-      height = window.innerHeight - 50;
-    }
-    scale = Math.min(width, height) * 1.5;
-  }
-
   var projection = d3.geo.orthographic()
       .clipAngle(90)
-      .clipExtent([[1, 1], [width - 1, height - 1]])
-      .scale(scale)
       .rotate([53, 14, 0])
       .precision(0.5)
-      .translate([width / 2, height / 2]);
-
-  var path = d3.geo.path().projection(projection)
-      .pointRadius(5);
 
   var svg = d3.select("#map")
-      .append("svg")
-      .attr("width", width)
-      .attr("height", height)
-      .call(d3.geo.zoom().projection(projection)
-      .scaleExtent([projection.scale() / 4, projection.scale() * 7])
-      .on("zoom.redraw", function() {
-        d3.event.sourceEvent.preventDefault();
-        svg.selectAll("path").attr("d", path);
-      }));
+      .append("svg");
+
+  var loader = d3.dispatch("world"), id = -1;
+  loader.on("world." + (++id), function() { svg.selectAll("path").attr("d", path); });
+
+  function adjustToScreen() {
+    var width = 900,
+        height = 560,
+        scale = 800;
+
+    if (window.innerWidth < 900) {
+      width = height = window.innerWidth;
+      if (window.innerHeight < height - 50) {
+        height = window.innerHeight - 50;
+      }
+      scale = Math.min(width, height) * 1.5;
+    }
+
+    projection = projection
+        .clipExtent([[1, 1], [width - 1, height - 1]])
+        .scale(scale)
+        .translate([width / 2, height / 2]);
+
+    path = path
+        .projection(projection);
+
+    svg = svg
+        .attr("width", width)
+        .attr("height", height)
+        .call(d3.geo.zoom().projection(projection)
+          .scaleExtent([projection.scale() / 4, projection.scale() * 7])
+          .on("zoom.redraw", function() {
+            d3.event.sourceEvent.preventDefault();
+            svg.selectAll("path").attr("d", path);
+          }));
+
+    loader.world();
+  }
+
+  var path = d3.geo.path()
+      .projection(projection)
+      .pointRadius(5);
+
+  adjustToScreen();
+  window.addEventListener("resize", adjustToScreen, false);
+  window.adjust = adjustToScreen;
+
 
   var bg = svg.append("g").attr("class", "bg");
   var md = svg.append("g").attr("class", "md");
@@ -267,9 +287,6 @@ function main() {
       route: route
     };
   }
-
-  var loader = d3.dispatch("world"), id = -1;
-  loader.on("world." + (++id), function() { svg.selectAll("path").attr("d", path); });
 
   d3.json("world-110m.json", function(error, world) {
     if (error) {
