@@ -1,13 +1,29 @@
 {
   "name": "flight-routes",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "",
   "author": "Jan Segre <jan@segre.in>",
   "license": "MPLv2",
+  "home": "https://github.com/jansegre/flight-routes",
   "dependencies": {
     "request": "~2.34.0",
     "moment": "~2.6.0",
     "sqlite3": "~2.2.3",
-    "cheerio": "~0.15.0"
-  }
+    "cheerio": "~0.15.0",
+    "priorityqueuejs": "~0.2.0",
+    "topojson": "~1.6.13",
+    "d3": "~3.4.6"
+  },
+  "devDependencies": {
+    "grunt": "~0.4.5",
+    "browserify": "~4.1.5",
+    "grunt-browserify": "~2.1.0",
+    "grunt-contrib-concat": "~0.4.0",
+    "grunt-contrib-watch": "~0.6.1",
+    "grunt-contrib-uglify": "~0.4.0",
+    "grunt-contrib-jshint": "~0.10.0",
+    "grunt-contrib-qunit": "~0.4.0",
+    "grunt-bower-task": "~0.3.4"
+  },
+  "private": true
 }
