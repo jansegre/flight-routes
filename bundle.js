@@ -135,6 +135,7 @@ function cross(a, b) {
  */
 
 function main() {
+  // Bibliotecas utilizadas
   var d3 = require('d3/d3');
   require('./lib/d3.geo.zoom');
   var topojson = require('topojson/topojson');
@@ -146,12 +147,17 @@ function main() {
       .rotate([53, 14, 0])
       .precision(0.5)
 
+  var path = d3.geo.path()
+      .projection(projection)
+      .pointRadius(5);
+
   var svg = d3.select("#map")
       .append("svg");
 
   var loader = d3.dispatch("world"), id = -1;
   loader.on("world." + (++id), function() { svg.selectAll("path").attr("d", path); });
 
+  // Ajustar mapa ao tamanho da janela
   function adjustToScreen() {
     var width = 900,
         height = 560,
@@ -186,19 +192,16 @@ function main() {
     loader.world();
   }
 
-  var path = d3.geo.path()
-      .projection(projection)
-      .pointRadius(5);
-
+  // Ajuste do tamanho da tela
   adjustToScreen();
   window.addEventListener("resize", adjustToScreen, false);
-  window.adjust = adjustToScreen;
 
-
+  // Declaracao das camadas da interface grafica
   var bg = svg.append("g").attr("class", "bg");
   var md = svg.append("g").attr("class", "md");
   var fg = svg.append("g").attr("class", "fg");
 
+  // Funcao que desenha o globo
   function drawMap(ctx, path, mousePoint) {
     ctx.append("path")
         .datum(d3.geo.graticule())
@@ -228,8 +231,10 @@ function main() {
         });
   }
 
+  // Declaracao do globo na camada do fundo
   bg.call(drawMap, path, true);
 
+  // Responsavel por encontrar o caminho de menor custo. Retorna o custo e o caminho
   function dijkstra(graph, src, dst) {
     var visited = {}, parents = {}, total;
     var priorityq = new PriorityQueue(function(pair_a, pair_b) {
@@ -288,6 +293,7 @@ function main() {
     };
   }
 
+  // Carrega e desenha o mapa-mundi
   d3.json("world-110m.json", function(error, world) {
     if (error) {
       //TODO: better error handling
@@ -303,10 +309,13 @@ function main() {
     loader.world();
   });
 
+  // Declaracao das variaveis de selecao de aeroporto
   var airport_a, airport_b;
   var select_a = true;
   var airport_graph = {};
 
+  // Carrega todos os aeroportos em que a TAM opera
+  // Database de aeroportos extraida do OpenFlights.org
   d3.json("tam_airports.json", function(error, airports) {
     if (error) {
       //TODO: better error handling
@@ -331,15 +340,21 @@ function main() {
         .attr("id", function (d) { return d.iata; })
         .attr("d", projection)
         .on("click", function(d) {
+          // Escolhe aeroporto de origem ou de destino
           if (select_a) {
             airport_a = d;
+
+            // Atualizam o texto inferior ao mapa
             d3.selectAll(".has-to").classed("hidden", true);
             d3.selectAll(".has-from").classed("hidden", false);
             d3.select("#from-airport").html(airport_graph[d.iata].name);
             d3.select("#from-city").html(airport_graph[d.iata].city);
           } else {
             airport_b = d;
+            // Caso ja tenha escolhido aeroporto destino, usa Dijkstra para calcular a trajetoria
             var dijk = dijkstra(airport_graph, airport_a.iata, airport_b.iata);
+
+            // Desenha as linhas da trajetoria encontrada
             var lines = md.selectAll("path.line")
               .data(dijk.route.map(function(r) {
                 var a = airport_graph[r[0]].coordinates;
@@ -357,6 +372,8 @@ function main() {
               });
             lines.exit()
               .remove();
+
+            // Atualizam o texto inferior ao mapa
             d3.selectAll(".has-to").classed("hidden", false);
             d3.select("#to-airport").html(airport_graph[d.iata].name);
             d3.select("#to-city").html(airport_graph[d.iata].city);
@@ -374,6 +391,7 @@ function main() {
   var routes;
 
   //TODO: allow choosing a day, not a main feature
+  // Carrega as rotas extraidas pelo crawl do site da TAM
   d3.json("tam_routes_20141002.json", function(error, _routes) {
     if (error) {
       //TODO: better error handling
@@ -389,6 +407,7 @@ function main() {
       }
     }
 
+    // Desenha as linhas de fundo das rotas
     bg.selectAll("path.route")
       .data(lines.map(function(r) {
         var a = airport_graph[r[0]].coordinates;
@@ -431,6 +450,7 @@ function main() {
 
 }
 
+// Main e chamada diferente dependendo se a aplicacao e chamada em mobile ou navegador
 if (window.cordova) {
   document.addEventListener("deviceready", main, false);
 } else {
