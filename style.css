@@ -15,26 +15,29 @@ body {
   width: 1000px;
 }
 
-.foreground {
-  fill: none;
-  stroke: #000;
-  stroke-width: 1px;
+#map svg {
   pointer-events: all;
   cursor: -webkit-grab;
   cursor: -moz-grab;
   cursor: grab;
 }
 
-.foreground.zooming {
+#map svg.zooming {
   cursor: -webkit-grabbing;
   cursor: -moz-grabbing;
   cursor: grabbing;
 }
 
+.foreground {
+  fill: none;
+  stroke: #000;
+  stroke-width: 1px;
+}
+
 .graticule {
   fill: none;
   stroke: #636B62;
-  stroke-width: .5px;
+  stroke-width: 0.5px;
   stroke-dasharray: 2,2;
 }
 
@@ -56,16 +59,28 @@ body {
 
 .line {
   fill: none;
-  stroke: #000;
-  stroke-width: 1.5px;
+  stroke: #444;
+  stroke-width: 2px;
+}
+
+.line:hover {
+  cursor: pointer;
+  stroke: #44F;
+}
+
+.route {
+  fill: none;
+  opacity: 0.3;
+  stroke: #444;
+  stroke-width: 0.2px;
 }
 
 .airport {
-  cursor: pointer;
   fill: #444;
 }
 
 .airport:hover {
+  cursor: pointer;
   fill: #44F;
 }
 

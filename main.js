@@ -20,16 +20,44 @@ var svg = d3.select("#map")
     .append("svg")
     .attr("width", width)
     .attr("height", height)
-    .call(drawMap, path, true);
-
-svg.selectAll(".foreground")
-    .call(drawMap, path, true)
     .call(d3.geo.zoom().projection(projection)
-        .scaleExtent([projection.scale() * .35, projection.scale() * 7])
-        .on("zoom.redraw", function() {
-            d3.event.sourceEvent.preventDefault();
-            svg.selectAll("path").attr("d", path);
-        }));
+    .scaleExtent([projection.scale() * .35, projection.scale() * 7])
+    .on("zoom.redraw", function() {
+      d3.event.sourceEvent.preventDefault();
+      svg.selectAll("path").attr("d", path);
+    }))
+
+var bg = svg.append("g").attr("class", "bg");
+var md = svg.append("g").attr("class", "md");
+var fg = svg.append("g").attr("class", "fg");
+
+function drawMap(ctx, path, mousePoint) {
+  ctx.append("path")
+      .datum(d3.geo.graticule())
+      .attr("class", "graticule")
+      .attr("d", path);
+
+  ctx.append("path")
+      .datum({type: "Sphere"})
+      .attr("class", "foreground")
+      .attr("d", path)
+      .on("mousedown.grab", function() {
+        var point;
+        if (mousePoint)
+          point = ctx.insert("path", ".foreground")
+            .datum({type: "Point", coordinates: projection.invert(d3.mouse(this))})
+            .attr("class", "point")
+            .attr("d", path);
+        svg.classed("zooming", true);
+        var w = d3.select(window).on("mouseup.grab", function() {
+              svg.classed("zooming", false);
+              w.on("mouseup.grab", null);
+              if (mousePoint) point.remove();
+            });
+      });
+}
+
+bg.call(drawMap, path, true);
 
 
 var loader = d3.dispatch("world"), id = -1;
@@ -41,10 +69,10 @@ d3.json("world-110m.json", function(error, world) {
     console.log("An error occurred: " + (error.msg || error));
     return;
   }
-  svg.insert("path", ".foreground")
+  bg.insert("path", ".foreground")
       .datum(topojson.feature(world, world.objects.land))
       .attr("class", "land");
-  svg.insert("path", ".foreground")
+  bg.insert("path", ".foreground")
       .datum(topojson.mesh(world, world.objects.countries))
       .attr("class", "mesh");
   loader.world();
@@ -68,20 +96,21 @@ d3.json("tam_airports.json", function(error, airports) {
     airport_graph[airport.iata] = airport;
   }
 
-  svg.selectAll("path.airport")
+  md.selectAll("path.airport")
       .data(airports.map(function (a) {
-          return {type: "Point", coordinates: a.coordinates, iata: a.iata, projection: projection}
+        return { type: "Point", coordinates: a.coordinates, iata: a.iata, projection: projection };
       }))
       .enter()
       .append("path")
       .attr("class", "airport")
+      .attr("id", function (d) { return d.iata; })
       .attr("d", projection)
       .on("click", function(d, i) {
           if (select_a) airport_a = d;
           else {
               airport_b = d;
               var dijk = dijkstra(airport_graph, airport_a.iata, airport_b.iata);
-              var lines = svg.selectAll("path.line")
+              var lines = md.selectAll("path.line")
                 .data(dijk.route.map(function(r) {
                   var a = airport_graph[r[0]].coordinates;
                   var b = airport_graph[r[1]].coordinates;
@@ -91,6 +120,7 @@ d3.json("tam_airports.json", function(error, airports) {
               lines.enter()
                 .append("path")
                 .attr("class", "line")
+                .attr("id", function (d) { return d.route + "!"; })
                 .attr("d", path);
               lines.exit()
                 .remove();
@@ -113,6 +143,23 @@ d3.json("tam_routes_20141002.json", function(error, _routes) {
   }
   routes = _routes;
 
+  var lines = [];
+  for (line in routes)
+    if (typeof routes[line] != "string")
+      lines.push(line.split("-"));
+
+  bg.selectAll("path.route")
+    .data(lines.map(function(r) {
+      var a = airport_graph[r[0]].coordinates;
+      var b = airport_graph[r[1]].coordinates;
+      return {type: "LineString", coordinates: [a, b], route: r.join("-")};
+    }))
+    .enter()
+    .append("path")
+    .attr("class", "route")
+    .attr("id", function (d) { return d.route; })
+    .attr("d", path);
+
   for (var route_name in routes) {
     var orig = route_name.split("-")[0];
     var dest = route_name.split("-")[1];
@@ -134,31 +181,6 @@ d3.json("tam_routes_20141002.json", function(error, _routes) {
 
   loader.world();
 });
-
-function drawMap(svg, path, mousePoint) {
-  svg.append("path")
-      .datum(d3.geo.graticule())
-      .attr("class", "graticule")
-      .attr("d", path);
-
-  svg.append("path")
-      .datum({type: "Sphere"})
-      .attr("class", "foreground")
-      .attr("d", path)
-      .on("mousedown.grab", function() {
-        var point;
-        if (mousePoint) point = svg.insert("path", ".foreground")
-            .datum({type: "Point", coordinates: projection.invert(d3.mouse(this))})
-            .attr("class", "point")
-            .attr("d", path);
-        var path = d3.select(this).classed("zooming", true),
-            w = d3.select(window).on("mouseup.grab", function() {
-              path.classed("zooming", false);
-              w.on("mouseup.grab", null);
-              if (mousePoint) point.remove();
-            });
-      });
-}
 
 function orthographicProjection(width, height) {
   return d3.geo.orthographic()
