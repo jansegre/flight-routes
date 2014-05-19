@@ -8,6 +8,7 @@ var d3 = require('d3/d3');
 require('./lib/d3.geo.zoom');
 var topojson = require('topojson/topojson');
 var PriorityQueue = require('priorityqueuejs');
+var accounting = require('accounting');
 
 var degrees = 180 / Math.PI,
     width = 900,
@@ -141,7 +142,7 @@ d3.json("tam_airports.json", function(error, airports) {
           d3.selectAll(".has-to").classed("hidden", false);
           d3.select("#to-airport").html(airport_graph[d.iata].name);
           d3.select("#to-city").html(airport_graph[d.iata].city);
-          d3.select("#total").html(dijk.total);
+          d3.select("#total").html(accounting.formatMoney(dijk.total, "R$ ", 2, ".", ","));
           var hasTotal = dijk.total != null;
           d3.selectAll(".has-total").classed("hidden", !hasTotal);
           d3.selectAll(".no-route").classed("hidden", hasTotal);

@@ -12,7 +12,8 @@
     "cheerio": "~0.15.0",
     "priorityqueuejs": "~0.2.0",
     "topojson": "~1.6.13",
-    "d3": "~3.4.6"
+    "d3": "~3.4.6",
+    "accounting": "~0.3.2"
   },
   "devDependencies": {
     "grunt": "~0.4.5",
